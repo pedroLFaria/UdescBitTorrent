@@ -1,5 +1,5 @@
 package com.udescbittorrent;
-
+import com.sun.net.httpserver.*;
 /**
  * Hello world!
  */
@@ -12,6 +12,10 @@ public final class App {
      * @param args The arguments of the program.
      */
     public static void main(String[] args) {
+        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+        server.createContext("/", new MyHandler());
+        server.setExecutor(null); // creates a default executor
+        server.start();
         // Start server
         new Thread(() -> {
             Peer peer = new Peer();
