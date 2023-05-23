@@ -1,6 +1,6 @@
 package com.udescbittorrent;
 import com.sun.net.httpserver.*;
-import com.udescbittorrent.TrackerHandler.TrackerHandler;
+import com.udescbittorrent.trackerHandler.TrackerHandler;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -17,10 +17,13 @@ public final class App {
 
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+
         server.createContext("/", new TrackerHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
         httpPost();
+        String serverPort = System.getProperty("app.mode");
+        System.out.println(serverPort);
     }
 
     static void httpPost() throws IOException {

@@ -1,18 +1,17 @@
-package com.udescbittorrent.TrackerHandler;
+package com.udescbittorrent.trackerHandler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.udescbittorrent.ObjectMapperSingleton;
+import com.udescbittorrent.models.PeerDto;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 
 public class TrackerHandler implements HttpHandler {
     Tracker tracker = Tracker.get();
@@ -21,19 +20,32 @@ public class TrackerHandler implements HttpHandler {
     public void handle(HttpExchange request) throws IOException {
         if ("POST".equals(request.getRequestMethod())) {
             handlePost(request);
+        } else if ("GET".equals(request.getRequestMethod())) {
+            handleGet(request);
         }
+    }
+
+    private void handleGet(HttpExchange request) throws IOException {
+        String responseBody = mapper.writeValueAsString(tracker.getPeerInfoList());
+        handleResponse(request, responseBody);
     }
 
     private void handlePost(HttpExchange request) throws IOException {
         InputStream is = request.getRequestBody();
         String requestBodyJson = readAllBytes(is);
         String[] filesChunk = mapper.readValue(requestBodyJson, String[].class);
-        PeerInfo newPeer = new PeerInfo();
+        PeerDto newPeer = new PeerDto();
         String peerIpAdress = request.getRemoteAddress().getAddress().getHostAddress();
         newPeer.setIp(peerIpAdress);
         newPeer.setFileChunk(new HashSet<>(Arrays.asList(filesChunk)));
         tracker.getPeerInfoList().add(newPeer);
-        String response = mapper.writeValueAsString(tracker.getPeerInfoList());
+
+        String responseBody = mapper.writeValueAsString(tracker.getPeerInfoList());
+        handleResponse(request, responseBody);
+    }
+
+    private static void handleResponse(HttpExchange request, String response) throws IOException {
+        request.getResponseHeaders().set("Content-Type", "application/json");
         request.sendResponseHeaders(200, response.length());
         OutputStream os = request.getResponseBody();
         os.write(response.getBytes());

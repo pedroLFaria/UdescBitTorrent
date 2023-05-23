@@ -1,23 +1,20 @@
-package com.udescbittorrent.TrackerHandler;
+package com.udescbittorrent.models;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
-public class PeerInfo {
+public class PeerDto {
 
     private String ip;
     private HashSet<String> fileChunk;
 
-    public PeerInfo(String ip, HashSet<String> fileChunk) {
+    public PeerDto(String ip, HashSet<String> fileChunk) {
         this.ip = ip;
         this.fileChunk = fileChunk;
     }
-    public PeerInfo() {
+    public PeerDto() {
         this.fileChunk = new HashSet<>();
     }
-    public PeerInfo(String ip) {
+    public PeerDto(String ip) {
         this.ip = ip;
         this.fileChunk = new HashSet<>();
     }
