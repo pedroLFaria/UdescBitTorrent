@@ -41,46 +41,26 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>com.coderplus.maven.plugins</groupId>
-        <artifactId>copy-rename-maven-plugin</artifactId>
-        <version>1.0</version>
-        <executions>
-          <execution>
-            <id>copy-file</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <sourceFile>src/main/resources/${profile.name}.properties</sourceFile>
-              <destinationFile>target/classes/protector.properties</destinationFile>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-<!--      <plugin>-->
-<!--        <groupId>org.codehaus.mojo</groupId>-->
-<!--        <artifactId>properties-maven-plugin</artifactId>-->
-<!--        <version>1.0.0</version>-->
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <goals>-->
-<!--              <goal>read-project-properties</goal>-->
-<!--            </goals>-->
-<!--            <configuration>-->
-<!--              <files>-->
-<!--                <file>src/main/resources/${profile.name}.properties</file>-->
-<!--              </files>-->
-<!--            </configuration>-->
-<!--          </execution>-->
-<!--        </executions>-->
-<!--      </plugin>-->
-      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.0.0</version>
         <configuration>
           <mainClass>com.udescbittorrent.App</mainClass>
+          <systemProperties>
+            <systemProperty>
+              <key>profile.name</key>
+              <value>${profile.name}</value>
+            </systemProperty>
+            <systemProperty>
+              <key>tracker.url</key>
+              <value>http://127.0.0.1:8000/</value>
+            </systemProperty>
+            <systemProperty>
+              <key>tracker.url</key>
+              <value>${profile.name}</value>
+            </systemProperty>
+            src/main/resources/file
+          </systemProperties>
         </configuration>
         <executions>
           <execution>

@@ -1,28 +1,24 @@
 package com.udescbittorrent.trackerHandler;
 
 import com.udescbittorrent.models.PeerDto;
+import com.udescbittorrent.models.TrackerDto;
 
 import java.util.*;
 
 public class Tracker {
-    private List<PeerDto> peerDtoList;
     private static Tracker instance;
+    private static TrackerDto trackerDto;
+    private static List<String> filesChunk = Arrays.asList("1-file.txt","2-file.txt","3-file.txt");
     private Tracker(){
-        this.peerDtoList = new ArrayList<>();
+        trackerDto = new TrackerDto(filesChunk);
     }
-
-    public static Tracker get(){
+    public static TrackerDto getTrackerDto() {
+        return trackerDto;
+    }
+    public static TrackerDto get(){
         if (instance == null){
             instance = new Tracker();
         }
-        return instance;
-    }
-
-    public List<PeerDto> getPeerInfoList() {
-        return peerDtoList;
-    }
-
-    public void setPeerInfoList(List<PeerDto> peerDtoList) {
-        this.peerDtoList = peerDtoList;
+        return instance.getTrackerDto();
     }
 }

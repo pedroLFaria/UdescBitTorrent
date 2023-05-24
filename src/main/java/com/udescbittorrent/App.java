@@ -1,5 +1,6 @@
 package com.udescbittorrent;
 import com.sun.net.httpserver.*;
+import com.udescbittorrent.peerHandler.PeerClient;
 import com.udescbittorrent.trackerHandler.TrackerHandler;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -13,22 +14,25 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import static com.udescbittorrent.peerHandler.PeerClient.sendFiles;
+
 public final class App {
 
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-
         server.createContext("/", new TrackerHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
-        httpPost();
-        String serverPort = System.getProperty("app.mode");
-        System.out.println(serverPort);
+//        PeerClient peerClient = new PeerClient();
+        PeerClient.sendInfoToTracker();
+//        PeerClient.sendFiles();
+//        String name = System.getProperty("profile.name");
+//        System.out.println(name);
     }
 
     static void httpPost() throws IOException {
         HttpPost httpPost = new HttpPost("http://localhost:8000/");
-        httpPost.setEntity(new StringEntity("[ \"file1.txt\", \"file2.txt\" ]"));
+        httpPost.setEntity(new StringEntity("[ \"1-file.txt\", \"2-file.txt\" ]"));
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpResponse response = httpclient.execute(httpPost);
         HttpEntity entity = response.getEntity();
