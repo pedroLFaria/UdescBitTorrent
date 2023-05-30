@@ -1,6 +1,7 @@
 package com.udescbittorrent;
 import com.sun.net.httpserver.*;
 import com.udescbittorrent.peerHandler.PeerClient;
+import com.udescbittorrent.peerHandler.PeerServerHandler;
 import com.udescbittorrent.trackerHandler.TrackerHandler;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -14,15 +15,18 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static com.udescbittorrent.peerHandler.PeerClient.sendFiles;
-
 public final class App {
 
     public static void main(String[] args) throws IOException {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-        server.createContext("/", new TrackerHandler());
-        server.setExecutor(null); // creates a default executor
-        server.start();
+        HttpServer serverTracker = HttpServer.create(new InetSocketAddress(8000), 0);
+        serverTracker.createContext("/", new TrackerHandler());
+        serverTracker.setExecutor(null); // creates a default executor
+        serverTracker.start();
+        HttpServer serverPeer = HttpServer.create(new InetSocketAddress(8002), 0);
+        serverPeer.createContext("/", new PeerServerHandler());
+        serverPeer.setExecutor(null); // creates a default executor
+        serverPeer.start();
+
 //        PeerClient peerClient = new PeerClient();
         PeerClient.sendInfoToTracker();
 //        PeerClient.sendFiles();

@@ -33,7 +33,7 @@ public class TrackerHandler implements HttpHandler {
 
     private void handlePost(HttpExchange request) throws IOException {
         PeerDto newPeer = getPeerDto(request);
-        tracker.getPeerInfoList().add(newPeer);
+        tracker.getPeerDtoList().add(newPeer);
         String responseBody = mapper.writeValueAsString(tracker);
         handleResponse(request, responseBody);
     }

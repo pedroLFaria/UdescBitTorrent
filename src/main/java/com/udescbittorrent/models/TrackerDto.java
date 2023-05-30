@@ -7,6 +7,8 @@ public class TrackerDto {
     private List<PeerDto> peerDtoList;
     private List<String> fileChunks;
 
+    public TrackerDto(){}
+
     public TrackerDto(List<String> fileChunks){
         peerDtoList = new ArrayList<>();
         this.fileChunks = fileChunks;
@@ -16,11 +18,11 @@ public class TrackerDto {
         this.fileChunks = fileChunks;
     }
 
-    public List<PeerDto> getPeerInfoList() {
+    public List<PeerDto> getPeerDtoList() {
         return peerDtoList;
     }
 
-    public void setPeerInfoList(List<PeerDto> peerDtoList) {
+    public void setPeerDtoList(List<PeerDto> peerDtoList) {
         this.peerDtoList = peerDtoList;
     }
 
