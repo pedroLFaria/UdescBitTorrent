@@ -11,6 +11,7 @@ public class Tracker {
     private static final List<String> filesChunk = Arrays.asList("1-file.txt","2-file.txt","3-file.txt");
     private Tracker(){
         trackerDto = new TrackerDto(filesChunk);
+        System.out.print("Inicializando o tracker com os pedaços de arquivos: " + String.join(", ", filesChunk));
     }
     public static TrackerDto getTrackerDto() {
         return trackerDto;

@@ -23,12 +23,12 @@ public class PeerClientHandler implements HttpHandler {
     }
 
     private void handleGet(HttpExchange request) throws IOException {
-        String urlInfo = getPathInfo(request);
+        String[] urlInfo = getPathInfo(request);
         if (urlInfo == null) {
             handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
             return;
         }
-        String filePath = "src/main/resources/file/" + urlInfo;
+        String filePath = "src/main/resources/file/" + urlInfo[1];
         Path file = Paths.get(filePath);
 
         if (!Files.exists(file) || !Files.isReadable(file)) {
@@ -48,10 +48,10 @@ public class PeerClientHandler implements HttpHandler {
         }
     }
 
-    private static String getPathInfo(HttpExchange request) {
+    private static String[] getPathInfo(HttpExchange request) {
         String path = request.getRequestURI().getPath();
         String[] pathParts = path.split("/");
-        return pathParts[1];
+        return pathParts;
     }
 
     private void handlePost(HttpExchange request) throws IOException {

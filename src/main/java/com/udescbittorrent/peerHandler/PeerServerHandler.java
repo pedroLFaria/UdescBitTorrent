@@ -23,7 +23,7 @@ public class PeerServerHandler implements HttpHandler {
     }
 
     private void handleGet(HttpExchange request) throws IOException {
-        String urlInfo = getPathInfo(request);
+        String urlInfo = getPathInfo(request);        
         if (urlInfo == null) {
             handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
             return;
@@ -39,7 +39,7 @@ public class PeerServerHandler implements HttpHandler {
         try {
             request.getResponseHeaders().set("Content-Type", "application/octet-stream");
             request.sendResponseHeaders(200, Files.size(file));
-
+            System.out.print("Enviando arquivo " + urlInfo + "para o peer " + request.getRemoteAddress().getAddress().getHostAddress());
             OutputStream os = request.getResponseBody();
             Files.copy(file, os);
             os.close();

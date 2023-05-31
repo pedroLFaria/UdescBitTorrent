@@ -32,8 +32,9 @@ public class TrackerHandler implements HttpHandler {
     }
 
     private void handlePost(HttpExchange request) throws IOException {
-        PeerDto newPeer = getPeerDto(request);
+        PeerDto newPeer = getPeerDto(request);        
         tracker.getPeerDtoList().add(newPeer);
+        System.out.print("Novo peer adicionado a rede: " + newPeer.getIp());
         String responseBody = mapper.writeValueAsString(tracker);
         handleResponse(request, responseBody);
     }
