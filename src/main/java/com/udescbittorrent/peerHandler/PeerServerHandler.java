@@ -23,7 +23,7 @@ public class PeerServerHandler implements HttpHandler {
     }
 
     private void handleGet(HttpExchange request) throws IOException {
-        String urlInfo = getPathInfo(request);        
+        String urlInfo = getPathInfo(request, 1);        
         if (urlInfo == null) {
             handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
             return;
@@ -48,10 +48,10 @@ public class PeerServerHandler implements HttpHandler {
         }
     }
 
-    private static String getPathInfo(HttpExchange request) {
+    private static String getPathInfo(HttpExchange request, int part) {
         String path = request.getRequestURI().getPath();
         String[] pathParts = path.split("/");
-        return pathParts[1];
+        return pathParts[part];
     }
 
     private void handlePost(HttpExchange request) throws IOException {
