@@ -14,24 +14,24 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
+
 
 public final class App {
 
     public static void main(String[] args) throws IOException {
-        HttpServer serverTracker = HttpServer.create(new InetSocketAddress(8000), 0);
-        serverTracker.createContext("/", new TrackerHandler());
-        serverTracker.setExecutor(null); // creates a default executor
-        serverTracker.start();
-        HttpServer serverPeer = HttpServer.create(new InetSocketAddress(8002), 0);
-        serverPeer.createContext("/", new PeerServerHandler());
-        serverPeer.setExecutor(null); // creates a default executor
-        serverPeer.start();
-
-//        PeerClient peerClient = new PeerClient();
-        PeerClient.sendInfoToTracker();
-//        PeerClient.sendFiles();
-//        String name = System.getProperty("profile.name");
-//        System.out.println(name);
+        if("tracker".equals(PropertiesService.profileName)) {
+            HttpServer serverTracker = HttpServer.create(new InetSocketAddress(8000), 0);
+            serverTracker.createContext("/", new TrackerHandler());
+            serverTracker.setExecutor(null); // creates a default executor
+            serverTracker.start();
+        }    else {
+            HttpServer serverPeer = HttpServer.create(new InetSocketAddress(8002), 0);
+            serverPeer.createContext("/", new PeerServerHandler());
+            serverPeer.setExecutor(null); // creates a default executor
+            serverPeer.start();
+            PeerClient.sendInfoToTracker();
+        }
     }
 
     static void httpPost() throws IOException {

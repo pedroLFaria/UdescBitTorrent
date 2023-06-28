@@ -2,6 +2,7 @@ package com.udescbittorrent.peerHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.udescbittorrent.ObjectMapperSingleton;
+import com.udescbittorrent.PropertiesService;
 import com.udescbittorrent.models.TrackerDto;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -20,15 +21,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class PeerClient {
-    static String trackerUrl = System.getProperty("tracker.url") != null ? System.getProperty("tracker.url") : "http://localhost:8000/";
-    static String fileChunksFolder = System.getProperty("peer.files.folder") != null ? System.getProperty("peer.files.folder") : "src/main/resources/file";
+
     static ObjectMapper mapper = ObjectMapperSingleton.getInstance();
     static Peer peerService = Peer.getInstance();
     private static final CloseableHttpClient httpClient = HttpClients.createDefault();
 
     public static void sendInfoToTracker() throws IOException {
         List<String> fileChunks =  getFileChunks();
-        TrackerDto trackerDto = httpPost(trackerUrl, fileChunks);
+        TrackerDto trackerDto = httpPost(PropertiesService.trackerUrl, fileChunks);
         peerService.initiateChunkMap(trackerDto.getFileChunks());
         trackerDto.getPeerDtoList().forEach(peerDto -> {
             peerDto.getFileChunk().forEach(chunk -> peerService.addPeerToChunkMap(chunk, peerDto.getIp()));
@@ -38,7 +38,7 @@ public class PeerClient {
     }
 
     public static void getPeersFromTracker() throws IOException {
-        HttpResponse response = httpGet(trackerUrl);
+        HttpResponse response = httpGet(PropertiesService.trackerUrl);
         TrackerDto trackerDto = mapperToDto(response);
         peerService.setPeers(trackerDto.getPeerDtoList());
         peerService.setFilesChunksInfo(trackerDto.getFileChunks());
@@ -82,7 +82,7 @@ public class PeerClient {
 
     public static List<String> getFileChunks() {
         List<String> fileList = new ArrayList<>();
-        String folderPath = fileChunksFolder;
+        String folderPath = PropertiesService.peerFileFolders;
         File folder = new File(folderPath);
         if (folder.exists() && folder.isDirectory()) {
             File[] files = folder.listFiles();

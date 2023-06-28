@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PeerServerHandler implements HttpHandler {
-    static String fileFolders = System.getProperty("peer.files.folder") != null ? System.getProperty("peer.files.folder") : "src/main/resources/file";
+
 
     @Override
     public void handle(HttpExchange request) throws IOException {
@@ -23,7 +23,7 @@ public class PeerServerHandler implements HttpHandler {
     }
 
     private void handleGet(HttpExchange request) throws IOException {
-        String urlInfo = getPathInfo(request, 1);        
+        String urlInfo = getPathInfo(request, 1);
         if (urlInfo == null) {
             handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
             return;
