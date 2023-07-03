@@ -2,6 +2,7 @@ package com.udescbittorrent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
+import com.udescbittorrent.dtos.PeerDto;
 import com.udescbittorrent.dtos.TrackerDto;
 import com.udescbittorrent.services.HttpClientService;
 import com.udescbittorrent.services.ObjectMapperService;
@@ -9,6 +10,7 @@ import com.udescbittorrent.services.PropertiesService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -19,13 +21,14 @@ import org.apache.http.util.EntityUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Utils {
-    private static HttpClient httpClient = HttpClientService.getHttpClient();
+    private static final HttpClient httpClient = HttpClientService.getHttpClient();
     static ObjectMapper mapper = ObjectMapperService.getInstance();
 
-    public static List<String> getFileChunks() {
-        List<String> fileList = new ArrayList<>();
+    public static HashSet<String> getFileChunks() {
+        HashSet<String> fileList = new HashSet<>();
         String folderPath = PropertiesService.peerFileFolders;
         File folder = new File(folderPath);
         if (folder.exists() && folder.isDirectory()) {
@@ -41,11 +44,11 @@ public class Utils {
         return fileList;
     }
 
-    public static HttpResponse httpPost(String url, Object fileChunks) {
+    public static HttpResponse httpPost(String url, Object body) {
         HttpPost httpPost = new HttpPost(url);
         httpPost.setHeader("Content-Type", "application/json");
         try {
-            httpPost.setEntity(new StringEntity(mapper.writeValueAsString(fileChunks)));
+            httpPost.setEntity(new StringEntity(mapper.writeValueAsString(body)));
             CloseableHttpClient httpclient = HttpClients.createDefault();
             HttpResponse response = httpclient.execute(httpPost);
             System.out.println("Tracker response " + response.getStatusLine());
@@ -60,6 +63,10 @@ public class Utils {
         return httpClient.execute(httpGet);
     }
 
+    public static HttpResponse httpDelete(String url) throws IOException {
+        HttpDelete httpDelete = new HttpDelete(url);
+        return httpClient.execute(httpDelete);
+    }
     public static TrackerDto mapperToDto(HttpResponse response) {
         HttpEntity entity = response.getEntity();
         if (entity == null) {
@@ -88,7 +95,9 @@ public class Utils {
         return result;
     }
 
-    public static String findLeastFrequentChunk(List<HashSet<String>> stringSets, List<String> missingChunks) {
+    public static String findLeastFrequentChunk(Hashtable<String, PeerDto> peerTable, List<String> missingChunks) {
+        List<HashSet<String>> stringSets = peerTable.values().stream()
+            .map(PeerDto::getFileChunk).collect(Collectors.toList());
         HashMap<String, Integer> stringCountMap = new HashMap<>();
         for (HashSet<String> set : stringSets) {
             for (String str : set) {

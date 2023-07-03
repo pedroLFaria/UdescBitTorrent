@@ -1,13 +1,5 @@
 {
   "version": "3",
-  "services": {
-    "meu_servico": {
-      "image": "minha_imagem",
-      "networks": [
-        "minha_rede"
-      ]
-    }
-  },
   "networks": {
     "minha_rede": {
       "driver": "bridge"

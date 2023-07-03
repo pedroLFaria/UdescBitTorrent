@@ -29,19 +29,6 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.0</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-              <mainClass>com.udescbittorrent.App</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
@@ -61,54 +48,7 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.0.0</version>
-        <configuration>
-          <mainClass>com.udescbittorrent.App</mainClass>
-          <systemProperties>
-            <systemProperty>
-              <key>profile.name</key>
-              <value>${profile.name}</value>
-            </systemProperty>
-            <systemProperty>
-              <key>tracker.url</key>
-              <value>http://127.0.0.1:8000/</value>
-            </systemProperty>
-            src/main/resources/file
-          </systemProperties>
-        </configuration>
-        <executions>
-          <execution>
-            <id>package</id>
-            <goals>
-              <goal>java</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>peer</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <properties>
-        <profile.name>peer</profile.name>
-      </properties>
-    </profile>
-    <profile>
-      <id>tracker</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <properties>
-        <profile.name>tracker</profile.name>
-      </properties>
-    </profile>
-  </profiles>
 
 </project>

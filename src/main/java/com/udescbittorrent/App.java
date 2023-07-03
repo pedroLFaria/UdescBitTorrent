@@ -10,11 +10,11 @@ import com.udescbittorrent.handlers.TrackerHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 
 public final class App {
-
-    static PeerClientService peerClient = PeerClientService.get();
 
     static public void main(String[] args) throws IOException {
         System.out.println(PropertiesService.toStrings());
@@ -25,20 +25,22 @@ public final class App {
             serverTracker.start();
         } else {
             int port = getNextAvailablePort();
-            HttpServer serverPeer = HttpServer.create(new InetSocketAddress(8002), 0);
+            PeerClientService peerClient = PeerClientService.get(String.valueOf(port));
+            HttpServer serverPeer = HttpServer.create(new InetSocketAddress(port), 0);
             serverPeer.createContext("/server/", new PeerServerHandler());
             serverPeer.createContext("/client/", new PeerClientHandler());
             serverPeer.setExecutor(null);
             serverPeer.start();
-            peerClient.sendInfoToTracker(Long.parseLong(PropertiesService.peerThreadSleepTime));
+            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+            peerClient.sendInfoToTracker(executor, Long.parseLong(PropertiesService.peerThreadSleepTime));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> PeerClientService.unsubscribeFromTracker(executor)));
         }
     }
     public static int getNextAvailablePort() {
         try (ServerSocket serverSocket = new ServerSocket(0)) {
             return serverSocket.getLocalPort();
         } catch (IOException e) {
-            // Tratar exceção
-            e.printStackTrace();
+            System.out.println("Falha ao obter uma porta!");
             return -1;
         }
     }

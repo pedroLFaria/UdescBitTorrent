@@ -6,8 +6,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 public class TrackerDto {
-    //192.168.10.15: 1-file, 2-file, 3-file
-    private final Hashtable<String, HashSet<String>> peerTable;
+    private final Hashtable<String, PeerDto> peerTable;
     private final List<String> fileChunks;
 
     public TrackerDto(){
@@ -19,11 +18,11 @@ public class TrackerDto {
         this.fileChunks = fileChunks;
     }
 
-    public void addPeer(PeerDto newPeer) {
-        peerTable.put(newPeer.getIp(), newPeer.getFileChunk());
+    public void addPeer(String peerIp,PeerDto newPeer) {
+        peerTable.put(peerIp, newPeer);
     }
 
-    public Hashtable<String, HashSet<String>> getPeerTable() {
+    public Hashtable<String, PeerDto> getPeerTable() {
         return peerTable;
     }
 

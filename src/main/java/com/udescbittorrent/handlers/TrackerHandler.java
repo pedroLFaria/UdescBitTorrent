@@ -21,6 +21,10 @@ public class TrackerHandler implements HttpHandler {
 
     private static void handleResponse(HttpExchange request, String response) throws IOException {
         request.getResponseHeaders().set("Content-Type", "application/json");
+        if(response == null){
+            request.sendResponseHeaders(204, 0);
+            request.getResponseBody().close();
+        }
         request.sendResponseHeaders(200, response.length());
         OutputStream os = request.getResponseBody();
         os.write(response.getBytes());
@@ -43,7 +47,16 @@ public class TrackerHandler implements HttpHandler {
             handlePost(request);
         } else if ("GET".equals(request.getRequestMethod())) {
             handleGet(request);
+        } else if ("DELETE".equals(request.getRequestMethod())) {
+            handleDelete(request);
         }
+    }
+
+    private void handleDelete(HttpExchange request) throws IOException {
+        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
+        tracker.getPeerTable().remove(peerAddress);
+        System.out.println("Removendo o peer " + peerAddress);
+        handleResponse(request, null);
     }
 
     private void handleGet(HttpExchange request) throws IOException {
@@ -58,29 +71,21 @@ public class TrackerHandler implements HttpHandler {
     }
 
     private void handlePost(HttpExchange request) throws IOException {
+        String peerIp = request.getRemoteAddress().getAddress().getHostAddress();
         PeerDto newPeer = getPeerDto(request);
-        tracker.addPeer(newPeer);
+        tracker.addPeer(peerIp, newPeer);
 
-        System.out.println("Novo peer adicionado a rede: " + newPeer.getIp());
+        System.out.println("Novo peer adicionado a rede: " + peerIp);
 
         TrackerDto response = tracker.clone();
-        response.getPeerTable().remove(newPeer.getIp());
+        response.getPeerTable().remove(peerIp);
         String responseBody = mapper.writeValueAsString(response);
         handleResponse(request, responseBody);
     }
 
     private PeerDto getPeerDto(HttpExchange request) throws IOException {
-        HashSet<String> fileChunks = getFileChunks(request);
-        PeerDto newPeer = new PeerDto();
-        String peerIpAddress = request.getRemoteAddress().getAddress().getHostAddress();
-        newPeer.setIp(peerIpAddress);
-        newPeer.setFileChunk(fileChunks);
-        return newPeer;
-    }
-
-    private HashSet<String> getFileChunks(HttpExchange request) throws IOException {
         InputStream is = request.getRequestBody();
         String requestBodyJson = readAllBytes(is);
-        return new HashSet<>(Arrays.asList(mapper.readValue(requestBodyJson, String[].class)));
+        return mapper.readValue(requestBodyJson, PeerDto.class);
     }
 }
