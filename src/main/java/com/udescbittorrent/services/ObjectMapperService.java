@@ -1,11 +1,11 @@
-package com.udescbittorrent;
+package com.udescbittorrent.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ObjectMapperSingleton {
+public class ObjectMapperService {
     private static ObjectMapper objectMapper;
 
-    private ObjectMapperSingleton() {}
+    private ObjectMapperService() {}
     public static synchronized ObjectMapper getInstance() {
         if (objectMapper == null) {
             objectMapper = new ObjectMapper();

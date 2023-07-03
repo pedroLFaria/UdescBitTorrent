@@ -1,15 +1,14 @@
-package com.udescbittorrent.trackerHandler;
+package com.udescbittorrent.services;
 
-import com.udescbittorrent.PropertiesService;
-import com.udescbittorrent.models.TrackerDto;
+import com.udescbittorrent.dtos.TrackerDto;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Tracker {
-    private static Tracker instance;
+public class TrackerService {
+    private static TrackerService instance;
     private static TrackerDto trackerDto;
-    private Tracker(){
+    private TrackerService(){
         List<String> fileChunks = Arrays.stream(PropertiesService.fileChunks.split(",")).collect(Collectors.toList());
         trackerDto = new TrackerDto(fileChunks);
         System.out.println("Inicializando o tracker com os pedaços de arquivos: " + String.join(", ", fileChunks));
@@ -19,7 +18,7 @@ public class Tracker {
     }
     public static TrackerDto get(){
         if (instance == null){
-            instance = new Tracker();
+            instance = new TrackerService();
         }
         return getTrackerDto();
     }

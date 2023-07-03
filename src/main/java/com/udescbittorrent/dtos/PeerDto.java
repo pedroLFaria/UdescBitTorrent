@@ -1,10 +1,11 @@
-package com.udescbittorrent.models;
+package com.udescbittorrent.dtos;
 
 import java.util.HashSet;
 
 public class PeerDto {
 
     private String ip;
+    private String port;
     private HashSet<String> fileChunk;
 
     public PeerDto(String ip, HashSet<String> fileChunk) {

@@ -1,14 +1,14 @@
-package com.udescbittorrent.peerHandler;
+package com.udescbittorrent.services;
 
-import com.udescbittorrent.PropertiesService;
 import com.udescbittorrent.Utils;
-import com.udescbittorrent.models.TrackerDto;
+import com.udescbittorrent.dtos.TrackerDto;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,25 +20,29 @@ import java.util.stream.Collectors;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-public class PeerClient {
-    private static PeerClient instance;
+public class PeerClientService {
+    private static PeerClientService instance;
     private TrackerDto tracker;
 
-    private PeerClient() {
+    private PeerClientService() {
     }
 
-    public static PeerClient get() {
+    public static PeerClientService get() {
         if (instance == null) {
-            instance = new PeerClient();
+            instance = new PeerClientService();
         }
         return instance;
     }
 
     public static void sendInfoToTracker() {
-        List<String> fileChunks = Utils.getFileChunks();
-        HttpResponse response = Utils.httpPost(PropertiesService.trackerAddress, fileChunks);
-        instance.tracker = Utils.mapperToDto(response);
-        System.out.println("Sending informations to Tracker (" + PropertiesService.trackerAddress + "): " + String.join(", ", fileChunks));
+        try {
+            List<String> fileChunks = Utils.getFileChunks();
+            HttpResponse response = Utils.httpPost(PropertiesService.trackerAddress, fileChunks);
+            instance.tracker = Utils.mapperToDto(response);
+            System.out.println("Sending informations to Tracker (" + PropertiesService.trackerAddress + "): " + String.join(", ", fileChunks));
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+        }
     }
 
     public boolean getAllMissingChunks() throws IOException {
@@ -74,11 +78,16 @@ public class PeerClient {
         String rareChunk = Utils.findLeastFrequentChunk(new ArrayList<>(tracker.getPeerTable().values()), missingChunks);
         List<String> peerList = tracker.getPeerTable().entrySet().stream().filter(s -> s.getValue().contains(rareChunk)).map(Map.Entry::getKey).collect(Collectors.toList());
         for (String peer : peerList) {
-            HttpResponse response = Utils.httpGet(String.format("http://%s:8002/%s", peer, rareChunk));
+            String peerUrlGetChunk = String.format("http://%s:8002/server/%s", peer, rareChunk);
+            HttpResponse response = Utils.httpGet(peerUrlGetChunk);
             HttpEntity entity = response.getEntity();
             if (entity != null) {
                 try (InputStream inputStream = entity.getContent()) {
-                    Files.copy(inputStream, Paths.get(PropertiesService.peerFileFolders, rareChunk), REPLACE_EXISTING);
+                    Path filePath = Paths.get(PropertiesService.peerFileFolders, rareChunk);
+                    if(!Files.exists(filePath.getParent())) {
+                        Files.createDirectories(filePath);
+                    }
+                    Files.copy(inputStream, filePath, REPLACE_EXISTING);
                 } catch (Exception e) {
                     System.out.println("Erro ao obter pedaço de arquivo " + rareChunk + " Mensagem: " + e.getMessage());
                 }
@@ -93,7 +102,7 @@ public class PeerClient {
     public void sendInfoToTracker(long sleepTime) {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         System.out.printf("Initializing thread to send info to trackers with delay of %d Seconds\n", sleepTime);
-        executor.scheduleAtFixedRate(PeerClient::sendInfoToTracker, 0, sleepTime, TimeUnit.SECONDS);
+        executor.scheduleAtFixedRate(PeerClientService::sendInfoToTracker, 0, sleepTime, TimeUnit.SECONDS);
     }
 
     public TrackerDto getTracker() {

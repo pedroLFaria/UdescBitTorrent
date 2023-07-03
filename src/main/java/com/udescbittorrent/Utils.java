@@ -2,9 +2,13 @@ package com.udescbittorrent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
-import com.udescbittorrent.models.TrackerDto;
+import com.udescbittorrent.dtos.TrackerDto;
+import com.udescbittorrent.services.HttpClientService;
+import com.udescbittorrent.services.ObjectMapperService;
+import com.udescbittorrent.services.PropertiesService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -17,8 +21,8 @@ import java.io.IOException;
 import java.util.*;
 
 public class Utils {
-    private static final CloseableHttpClient httpClient = HttpClients.createDefault();
-    static ObjectMapper mapper = ObjectMapperSingleton.getInstance();
+    private static HttpClient httpClient = HttpClientService.getHttpClient();
+    static ObjectMapper mapper = ObjectMapperService.getInstance();
 
     public static List<String> getFileChunks() {
         List<String> fileList = new ArrayList<>();
@@ -74,8 +78,14 @@ public class Utils {
 
     public static String getPathInfo(HttpExchange request, int part) {
         String path = request.getRequestURI().getPath();
-        String[] pathParts = path.split("/");
-        return pathParts[part];
+        List<String> pathParts = Arrays.asList(path.split("/"));
+        String result = null;
+        try{
+            result = pathParts.get(part);
+        } catch (Exception e){
+            System.out.println("Falha ao obter informação");
+        }
+        return result;
     }
 
     public static String findLeastFrequentChunk(List<HashSet<String>> stringSets, List<String> missingChunks) {
@@ -85,16 +95,15 @@ public class Utils {
                 stringCountMap.put(str, stringCountMap.getOrDefault(str, 0) + 1);
             }
         }
-        String leastFrequentString = null;
+        String leastFrequentChunk = null;
         int leastFrequency = Integer.MAX_VALUE;
 
         for (Map.Entry<String, Integer> entry : stringCountMap.entrySet()) {
-            if (entry.getValue() < leastFrequency && !missingChunks.contains(entry.getKey())) {
+            if (entry.getValue() < leastFrequency && missingChunks.contains(entry.getKey())) {
                 leastFrequency = entry.getValue();
-                leastFrequentString = entry.getKey();
+                leastFrequentChunk = entry.getKey();
             }
         }
-
-        return leastFrequentString;
+        return leastFrequentChunk;
     }
 }

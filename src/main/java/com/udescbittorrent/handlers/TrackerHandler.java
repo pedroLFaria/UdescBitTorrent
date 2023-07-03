@@ -1,11 +1,12 @@
-package com.udescbittorrent.trackerHandler;
+package com.udescbittorrent.handlers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.udescbittorrent.ObjectMapperSingleton;
-import com.udescbittorrent.models.PeerDto;
-import com.udescbittorrent.models.TrackerDto;
+import com.udescbittorrent.services.ObjectMapperService;
+import com.udescbittorrent.dtos.PeerDto;
+import com.udescbittorrent.dtos.TrackerDto;
+import com.udescbittorrent.services.TrackerService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,8 +16,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 public class TrackerHandler implements HttpHandler {
-    TrackerDto tracker = Tracker.get();
-    ObjectMapper mapper = ObjectMapperSingleton.getInstance();
+    TrackerDto tracker = TrackerService.get();
+    ObjectMapper mapper = ObjectMapperService.getInstance();
 
     private static void handleResponse(HttpExchange request, String response) throws IOException {
         request.getResponseHeaders().set("Content-Type", "application/json");

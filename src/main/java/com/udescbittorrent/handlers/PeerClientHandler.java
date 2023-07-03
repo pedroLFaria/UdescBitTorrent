@@ -1,23 +1,26 @@
-package com.udescbittorrent.peerHandler;
+package com.udescbittorrent.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.udescbittorrent.Utils;
+import com.udescbittorrent.services.PeerClientService;
 import org.apache.http.HttpStatus;
 
 import java.io.IOException;
 
 public class PeerClientHandler implements HttpHandler {
 
-    PeerClient peerClient;
+    PeerClientService peerClient;
 
     public PeerClientHandler() {
-        peerClient = PeerClient.get();
+        peerClient = PeerClientService.get();
     }
 
     private static void handleResponse(HttpExchange request, int httpStatus, String response) throws IOException {
         request.getResponseHeaders().set("Content-Type", "application/json");
         request.sendResponseHeaders(httpStatus, response.length());
+        request.getResponseBody().write(response.getBytes());
+        request.getResponseBody().close();
     }
 
     @Override

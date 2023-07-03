@@ -1,4 +1,4 @@
-package com.udescbittorrent;
+package com.udescbittorrent.services;
 
 public class PropertiesService {
     public static String peerFileFolders = System.getProperty("peer.files.folder");

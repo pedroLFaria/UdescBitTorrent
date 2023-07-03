@@ -1,26 +1,20 @@
 package com.udescbittorrent;
 
 import com.sun.net.httpserver.HttpServer;
-import com.udescbittorrent.peerHandler.PeerClient;
-import com.udescbittorrent.peerHandler.PeerClientHandler;
-import com.udescbittorrent.peerHandler.PeerServerHandler;
-import com.udescbittorrent.trackerHandler.TrackerHandler;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import com.udescbittorrent.services.PeerClientService;
+import com.udescbittorrent.handlers.PeerClientHandler;
+import com.udescbittorrent.handlers.PeerServerHandler;
+import com.udescbittorrent.services.PropertiesService;
+import com.udescbittorrent.handlers.TrackerHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 
 
 public final class App {
 
-    static PeerClient peerClient = PeerClient.get();
+    static PeerClientService peerClient = PeerClientService.get();
 
     static public void main(String[] args) throws IOException {
         System.out.println(PropertiesService.toStrings());
@@ -30,35 +24,23 @@ public final class App {
             serverTracker.setExecutor(null);
             serverTracker.start();
         } else {
+            int port = getNextAvailablePort();
             HttpServer serverPeer = HttpServer.create(new InetSocketAddress(8002), 0);
-            serverPeer.createContext("/", new PeerServerHandler());
+            serverPeer.createContext("/server/", new PeerServerHandler());
             serverPeer.createContext("/client/", new PeerClientHandler());
             serverPeer.setExecutor(null);
             serverPeer.start();
             peerClient.sendInfoToTracker(Long.parseLong(PropertiesService.peerThreadSleepTime));
         }
     }
-
-    static void httpPost() throws IOException {
-        HttpPost httpPost = new HttpPost("http://172.17.0.4:8000/");
-        httpPost.setEntity(new StringEntity("[ \"1-file.txt\", \"2-file.txt\" ]"));
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpResponse response = httpclient.execute(httpPost);
-        HttpEntity entity = response.getEntity();
-        if (entity != null) {
-            String result = EntityUtils.toString(entity);
-            System.out.println(result);
+    public static int getNextAvailablePort() {
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
+            return serverSocket.getLocalPort();
+        } catch (IOException e) {
+            // Tratar exceção
+            e.printStackTrace();
+            return -1;
         }
     }
 
-    void httpGet() throws IOException {
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet("http://localhost:8000/");
-        HttpResponse response = httpclient.execute(httpGet);
-        HttpEntity entity = response.getEntity();
-        if (entity != null) {
-            String result = EntityUtils.toString(entity);
-            System.out.println(result);
-        }
-    }
 }

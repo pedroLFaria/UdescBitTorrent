@@ -8,7 +8,7 @@
     <option name="VM_PARAMETERS" value="-Dspring.profiles.active=peer -Dtracker.url=http://localhost:8002/" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.udescbittorrent.models.*" />
+        <option name="PATTERN" value="com.udescbittorrent.dtos.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>
