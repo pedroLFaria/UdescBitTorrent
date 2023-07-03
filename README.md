@@ -1,6 +1,25 @@
 # UdescBitTorrent
 
+**Requisitos**
+- apache-maven-3.8.3
+- Java version: 18.0.1
 
+**Instalar os pacotes**
+```console
+$ mvn clean install
+```
+
+**Comando para execuar o jar**
+
+*Modificar os parâmetros*
+
+```console
+# Executar o tracker
+java -Dprofile="tracker" -D"file-chunks"="1-file.txt,2-file.txt,3-file.txt" -jar my-app.jar
+
+#Executar um peer
+java -D"peer.files.folder"="C:\Users\Docal\source\udesc-bit-torrent-files" -Dprofile="peer" -D"peer.thread.sleep-time"="5" -D"tracker.url"="http://localhost:8004" -jar my-app.jar
+```
 
 
 <details>
@@ -15,7 +34,7 @@ curl --location 'http://localhost:8002/client/'
 curl --location 'http://localhost:8002/client/all'
 ```
 Comando de servidor do peer
-```shell
+|```shell
 #Devolve o arquivo 1-file.txt caso exista
 curl --location 'http://localhost:8002/server/1-file.txt'
 ```
