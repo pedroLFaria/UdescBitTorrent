@@ -1,0 +1,11 @@
+FROM maven:3.8.4-openjdk-17-slim AS builder
+COPY . /app
+WORKDIR /app
+RUN mvn clean package
+FROM adoptopenjdk:11-jre-hotspot
+COPY --from=builder /app/target/my-app-1.0-SNAPSHOT.jar /app/my-app.jar
+COPY  /resources/files/. /files
+WORKDIR /app
+EXPOSE 8000
+CMD ["java", "-Dprofile=tracker", "-Dfile-chunks=1-file.txt,2-file.txt,3-file.txt","-jar", "my-app.jar" ]
+

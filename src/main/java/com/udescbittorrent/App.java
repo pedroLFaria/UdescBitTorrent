@@ -1,6 +1,8 @@
 package com.udescbittorrent;
-import com.sun.net.httpserver.*;
+
+import com.sun.net.httpserver.HttpServer;
 import com.udescbittorrent.peerHandler.PeerClient;
+import com.udescbittorrent.peerHandler.PeerClientHandler;
 import com.udescbittorrent.peerHandler.PeerServerHandler;
 import com.udescbittorrent.trackerHandler.TrackerHandler;
 import org.apache.http.HttpEntity;
@@ -14,28 +16,31 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.Arrays;
 
 
 public final class App {
 
-    public static void main(String[] args) throws IOException {
-        if("tracker".equals(PropertiesService.profileName)) {
+    static PeerClient peerClient = PeerClient.get();
+
+    static public void main(String[] args) throws IOException {
+        System.out.println(PropertiesService.toStrings());
+        if ("tracker".equals(PropertiesService.profileName)) {
             HttpServer serverTracker = HttpServer.create(new InetSocketAddress(8000), 0);
             serverTracker.createContext("/", new TrackerHandler());
-            serverTracker.setExecutor(null); // creates a default executor
+            serverTracker.setExecutor(null);
             serverTracker.start();
-        }    else {
+        } else {
             HttpServer serverPeer = HttpServer.create(new InetSocketAddress(8002), 0);
             serverPeer.createContext("/", new PeerServerHandler());
-            serverPeer.setExecutor(null); // creates a default executor
+            serverPeer.createContext("/client/", new PeerClientHandler());
+            serverPeer.setExecutor(null);
             serverPeer.start();
-            PeerClient.sendInfoToTracker();
+            peerClient.sendInfoToTracker(Long.parseLong(PropertiesService.peerThreadSleepTime));
         }
     }
 
     static void httpPost() throws IOException {
-        HttpPost httpPost = new HttpPost("http://localhost:8000/");
+        HttpPost httpPost = new HttpPost("http://172.17.0.4:8000/");
         httpPost.setEntity(new StringEntity("[ \"1-file.txt\", \"2-file.txt\" ]"));
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpResponse response = httpclient.execute(httpPost);

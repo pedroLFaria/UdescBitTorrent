@@ -1,8 +1,8 @@
 package com.udescbittorrent.trackerHandler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.udescbittorrent.ObjectMapperSingleton;
 import com.udescbittorrent.models.PeerDto;
 import com.udescbittorrent.models.TrackerDto;
@@ -17,42 +17,6 @@ import java.util.HashSet;
 public class TrackerHandler implements HttpHandler {
     TrackerDto tracker = Tracker.get();
     ObjectMapper mapper = ObjectMapperSingleton.getInstance();
-    @Override
-    public void handle(HttpExchange request) throws IOException {
-        if ("POST".equals(request.getRequestMethod())) {
-            handlePost(request);
-        } else if ("GET".equals(request.getRequestMethod())) {
-            handleGet(request);
-        }
-    }
-
-    private void handleGet(HttpExchange request) throws IOException {
-        String responseBody = mapper.writeValueAsString(tracker);
-        handleResponse(request, responseBody);
-    }
-
-    private void handlePost(HttpExchange request) throws IOException {
-        PeerDto newPeer = getPeerDto(request);        
-        tracker.getPeerDtoList().add(newPeer);
-        System.out.print("Novo peer adicionado a rede: " + newPeer.getIp());
-        String responseBody = mapper.writeValueAsString(tracker);
-        handleResponse(request, responseBody);
-    }
-
-    private PeerDto getPeerDto(HttpExchange request) throws IOException {
-        HashSet<String> fileChunks = getFileChunks(request);
-        PeerDto newPeer = new PeerDto();
-        String peerIpAdress = request.getRemoteAddress().getAddress().getHostAddress();
-        newPeer.setIp(peerIpAdress);
-        newPeer.setFileChunk(fileChunks);
-        return newPeer;
-    }
-
-    private HashSet<String> getFileChunks(HttpExchange request) throws IOException {
-        InputStream is = request.getRequestBody();
-        String requestBodyJson = readAllBytes(is);
-        return new HashSet<>(Arrays.asList(mapper.readValue(requestBodyJson, String[].class)));
-    }
 
     private static void handleResponse(HttpExchange request, String response) throws IOException {
         request.getResponseHeaders().set("Content-Type", "application/json");
@@ -72,5 +36,50 @@ public class TrackerHandler implements HttpHandler {
         return result.toString("UTF-8");
     }
 
+    @Override
+    public void handle(HttpExchange request) throws IOException {
+        if ("POST".equals(request.getRequestMethod())) {
+            handlePost(request);
+        } else if ("GET".equals(request.getRequestMethod())) {
+            handleGet(request);
+        }
+    }
 
+    private void handleGet(HttpExchange request) throws IOException {
+        TrackerDto response = tracker.clone();
+        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
+        response.getPeerTable().remove(peerAddress);
+        String responseBody = mapper.writeValueAsString(response);
+
+        System.out.println("Respondendo para peer: " + peerAddress);
+
+        handleResponse(request, responseBody);
+    }
+
+    private void handlePost(HttpExchange request) throws IOException {
+        PeerDto newPeer = getPeerDto(request);
+        tracker.addPeer(newPeer);
+
+        System.out.println("Novo peer adicionado a rede: " + newPeer.getIp());
+
+        TrackerDto response = tracker.clone();
+        response.getPeerTable().remove(newPeer.getIp());
+        String responseBody = mapper.writeValueAsString(response);
+        handleResponse(request, responseBody);
+    }
+
+    private PeerDto getPeerDto(HttpExchange request) throws IOException {
+        HashSet<String> fileChunks = getFileChunks(request);
+        PeerDto newPeer = new PeerDto();
+        String peerIpAddress = request.getRemoteAddress().getAddress().getHostAddress();
+        newPeer.setIp(peerIpAddress);
+        newPeer.setFileChunk(fileChunks);
+        return newPeer;
+    }
+
+    private HashSet<String> getFileChunks(HttpExchange request) throws IOException {
+        InputStream is = request.getRequestBody();
+        String requestBodyJson = readAllBytes(is);
+        return new HashSet<>(Arrays.asList(mapper.readValue(requestBodyJson, String[].class)));
+    }
 }

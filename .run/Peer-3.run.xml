@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Peer-3" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+    <deployment type="dockerfile">
+      <settings>
+        <option name="containerName" value="udescbittorrent-peer-3" />
+        <option name="sourceFilePath" value="Dockerfile-Peer-3" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

@@ -30,4 +30,12 @@ public class PeerDto {
     public void setIp(String ip) {
         this.ip = ip;
     }
+
+    @Override
+    public String toString() {
+        return "PeerDto{" +
+            "ip: '" + ip + '\'' +
+            ", fileChunk: [" + String.join(", ", fileChunk) +
+            "]}";
+    }
 }

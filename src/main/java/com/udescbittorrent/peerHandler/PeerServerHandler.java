@@ -2,6 +2,8 @@ package com.udescbittorrent.peerHandler;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.udescbittorrent.PropertiesService;
+import com.udescbittorrent.Utils;
 import org.apache.http.HttpStatus;
 
 import java.io.IOException;
@@ -23,35 +25,29 @@ public class PeerServerHandler implements HttpHandler {
     }
 
     private void handleGet(HttpExchange request) throws IOException {
-        String urlInfo = getPathInfo(request, 1);
+        String urlInfo = Utils.getPathInfo(request, 1);
         if (urlInfo == null) {
             handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
             return;
         }
-        String filePath = "src/main/resources/file/" + urlInfo;
+        String filePath = PropertiesService.peerFileFolders + "/" + urlInfo;
         Path file = Paths.get(filePath);
 
         if (!Files.exists(file) || !Files.isReadable(file)) {
-            handleResponse(request, 404, "File not found");
+            handleResponse(request, 404, "File not found\n");
             return;
         }
 
         try {
             request.getResponseHeaders().set("Content-Type", "application/octet-stream");
             request.sendResponseHeaders(200, Files.size(file));
-            System.out.print("Enviando arquivo " + urlInfo + "para o peer " + request.getRemoteAddress().getAddress().getHostAddress());
+            System.out.println("Enviando arquivo " + urlInfo + "para o peer " + request.getRemoteAddress().getAddress().getHostAddress());
             OutputStream os = request.getResponseBody();
             Files.copy(file, os);
             os.close();
         } catch (IOException e) {
             handleResponse(request, 500, "Internal server error");
         }
-    }
-
-    private static String getPathInfo(HttpExchange request, int part) {
-        String path = request.getRequestURI().getPath();
-        String[] pathParts = path.split("/");
-        return pathParts[part];
     }
 
     private void handlePost(HttpExchange request) throws IOException {
@@ -61,5 +57,7 @@ public class PeerServerHandler implements HttpHandler {
     private static void handleResponse(HttpExchange request, int httpStatus, String response) throws IOException {
         request.getResponseHeaders().set("Content-Type", "application/json");
         request.sendResponseHeaders(httpStatus, response.length());
+        request.getResponseBody().write(response.getBytes());
+        request.close();
     }
 }
