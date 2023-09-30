@@ -13,16 +13,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PeerServerHandler implements HttpHandler {
-
-
-    @Override
+    
     public void handle(HttpExchange request) throws IOException {
-        handleGet(request);
+        handlePost(request);
     }
 
-    private void handleGet(HttpExchange request) throws IOException {
+    private void handlePost(HttpExchange request) throws IOException {
         String urlInfo = Utils.getPathInfo(request, 2);
         if (urlInfo == null) {
+            handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
+            return;
+        }else if (urlInfo == "message") {
+            handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
+            return;
+        }else if (urlInfo == "file") {
             handleResponse(request, HttpStatus.SC_BAD_REQUEST, "Parametro não enviado");
             return;
         }

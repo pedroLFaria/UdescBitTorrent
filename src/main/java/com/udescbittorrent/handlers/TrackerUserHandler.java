@@ -1,5 +1,6 @@
 package com.udescbittorrent.handlers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -12,24 +13,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.HashSet;
 
-public class TrackerHandler implements HttpHandler {
+public class TrackerUserHandler implements HttpHandler {
+
     TrackerDto tracker = TrackerService.get();
     ObjectMapper mapper = ObjectMapperService.getInstance();
-
-    private static void handleResponse(HttpExchange request, String response) throws IOException {
-        request.getResponseHeaders().set("Content-Type", "application/json");
-        if(response == null){
-            request.sendResponseHeaders(204, 0);
-            request.getResponseBody().close();
-        }
-        request.sendResponseHeaders(200, response.length());
-        OutputStream os = request.getResponseBody();
-        os.write(response.getBytes());
-        os.close();
-    }
 
     private static String readAllBytes(InputStream inputStream) throws IOException {
         ByteArrayOutputStream result = new ByteArrayOutputStream();
@@ -52,6 +40,19 @@ public class TrackerHandler implements HttpHandler {
         }
     }
 
+    private void handleGet(HttpExchange request) throws IOException {
+        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
+        handleRespondToPeer(request, peerAddress);
+    }
+
+    private void handlePost(HttpExchange request) throws IOException {
+        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
+        PeerDto newPeer = getPeerDto(request);
+        tracker.addPeer(peerAddress, newPeer);
+        System.out.println("Novo peer adicionado a rede: " + peerAddress);
+        handleRespondToPeer(request, peerAddress);
+    }
+
     private void handleDelete(HttpExchange request) throws IOException {
         String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
         tracker.getPeerTable().remove(peerAddress);
@@ -59,28 +60,24 @@ public class TrackerHandler implements HttpHandler {
         handleResponse(request, null);
     }
 
-    private void handleGet(HttpExchange request) throws IOException {
+    private void handleRespondToPeer(HttpExchange request, String peerAddress) throws JsonProcessingException, IOException {
         TrackerDto response = tracker.clone();
-        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
         response.getPeerTable().remove(peerAddress);
         String responseBody = mapper.writeValueAsString(response);
-
         System.out.println("Respondendo para peer: " + peerAddress);
-
         handleResponse(request, responseBody);
     }
 
-    private void handlePost(HttpExchange request) throws IOException {
-        String peerIp = request.getRemoteAddress().getAddress().getHostAddress();
-        PeerDto newPeer = getPeerDto(request);
-        tracker.addPeer(peerIp, newPeer);
-
-        System.out.println("Novo peer adicionado a rede: " + peerIp);
-
-        TrackerDto response = tracker.clone();
-        response.getPeerTable().remove(peerIp);
-        String responseBody = mapper.writeValueAsString(response);
-        handleResponse(request, responseBody);
+    private static void handleResponse(HttpExchange request, String response) throws IOException {
+        request.getResponseHeaders().set("Content-Type", "application/json");
+        if(response == null){
+            request.sendResponseHeaders(204, 0);
+            request.getResponseBody().close();
+        }
+        request.sendResponseHeaders(200, response.length());
+        OutputStream os = request.getResponseBody();
+        os.write(response.getBytes());
+        os.close();
     }
 
     private PeerDto getPeerDto(HttpExchange request) throws IOException {

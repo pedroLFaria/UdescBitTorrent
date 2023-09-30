@@ -2,11 +2,11 @@ package com.udescbittorrent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
-import com.udescbittorrent.dtos.PeerDto;
 import com.udescbittorrent.dtos.TrackerDto;
 import com.udescbittorrent.services.HttpClientService;
 import com.udescbittorrent.services.ObjectMapperService;
 import com.udescbittorrent.services.PropertiesService;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -20,8 +20,8 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Utils {
     private static final HttpClient httpClient = HttpClientService.getHttpClient();
@@ -43,6 +43,20 @@ public class Utils {
         }
         return fileList;
     }
+    
+    // public static HttpResponse httpPost(String url, File file) {
+    //     HttpPost httpPost = new HttpPost(url);
+    //     try {
+    //         BufferedReader reader = new BufferedReader(new FileReader(file));
+    //         file.
+    //         CloseableHttpClient httpclient = HttpClients.createDefault();
+    //         HttpResponse response = httpclient.execute(httpPost);
+    //         System.out.println("Tracker response " + response.getStatusLine());
+    //         return response;
+    //     } catch (IOException e) {
+    //         throw new RuntimeException(e);
+    //     }
+    // }
 
     public static HttpResponse httpPost(String url, Object body) {
         HttpPost httpPost = new HttpPost(url);
@@ -95,24 +109,12 @@ public class Utils {
         return result;
     }
 
-    public static String findLeastFrequentChunk(Hashtable<String, PeerDto> peerTable, List<String> missingChunks) {
-        List<HashSet<String>> stringSets = peerTable.values().stream()
-            .map(PeerDto::getFileChunk).collect(Collectors.toList());
-        HashMap<String, Integer> stringCountMap = new HashMap<>();
-        for (HashSet<String> set : stringSets) {
-            for (String str : set) {
-                stringCountMap.put(str, stringCountMap.getOrDefault(str, 0) + 1);
-            }
+    public static int getNextAvailablePort() {
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
+            return serverSocket.getLocalPort();
+        } catch (IOException e) {
+            System.out.println("Falha ao obter uma porta!");
+            return -1;
         }
-        String leastFrequentChunk = null;
-        int leastFrequency = Integer.MAX_VALUE;
-
-        for (Map.Entry<String, Integer> entry : stringCountMap.entrySet()) {
-            if (entry.getValue() < leastFrequency && missingChunks.contains(entry.getKey())) {
-                leastFrequency = entry.getValue();
-                leastFrequentChunk = entry.getKey();
-            }
-        }
-        return leastFrequentChunk;
     }
 }

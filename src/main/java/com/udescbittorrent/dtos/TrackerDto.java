@@ -1,33 +1,20 @@
 package com.udescbittorrent.dtos;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.List;
 
 public class TrackerDto {
     private final Hashtable<String, PeerDto> peerTable;
-    private final List<String> fileChunks;
 
     public TrackerDto(){
         peerTable = new Hashtable<>();
-        fileChunks = new ArrayList<>();
-    }
-    public TrackerDto(List<String> fileChunks) {
-        peerTable = new Hashtable<>();
-        this.fileChunks = fileChunks;
     }
 
-    public void addPeer(String peerIp,PeerDto newPeer) {
+    public void addPeer(String peerIp, PeerDto newPeer) {
         peerTable.put(peerIp, newPeer);
     }
 
     public Hashtable<String, PeerDto> getPeerTable() {
         return peerTable;
-    }
-
-    public List<String> getFileChunks() {
-        return fileChunks;
     }
 
     @Override
@@ -36,7 +23,7 @@ public class TrackerDto {
         try {
             tracker = (TrackerDto) super.clone();
         } catch (CloneNotSupportedException e) {
-            tracker = new TrackerDto(this.fileChunks);
+            tracker = new TrackerDto();
         }
         tracker.peerTable.putAll(this.peerTable);
         return tracker;
@@ -44,9 +31,6 @@ public class TrackerDto {
 
     @Override
     public String toString() {
-        return "TrackerDto{" +
-            "peerTable: " + peerTable +
-            ", fileChunks: [" + String.join(", ", fileChunks) +
-            "]}";
+        return String.format("TrackerDto{peerTable:{\n%s\n}", peerTable.toString()) ;
     }
 }

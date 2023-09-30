@@ -15,10 +15,10 @@ $ mvn clean install
 
 ```console
 # Executar o tracker
-java -Dprofile="tracker" -D"file-chunks"="1-file.txt,2-file.txt,3-file.txt" -jar my-app.jar
+java -Dprofile="tracker" -jar target/my-app-1.0-SNAPSHOT.jar
 
 #Executar um peer
-java -D"peer.files.folder"="C:\Users\Docal\source\udesc-bit-torrent-files" -Dprofile="peer" -D"peer.thread.sleep-time"="5" -D"tracker.url"="http://localhost:8004" -jar my-app.jar
+java -Dprofile="peer" -D"peer.thread.sleep-time"="5" -D"tracker.url"="http://localhost:8004" -jar target/my-app-1.0-SNAPSHOT.jar
 ```
 
 

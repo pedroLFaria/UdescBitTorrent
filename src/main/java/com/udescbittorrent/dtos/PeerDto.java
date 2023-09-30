@@ -1,33 +1,15 @@
 package com.udescbittorrent.dtos;
 
-import java.util.HashSet;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class PeerDto {
     private String port;
-    private HashSet<String> fileChunk;
-
-    public PeerDto(String port, HashSet<String> fileChunk) {
-        this.port = port;
-        this.fileChunk = fileChunk;
-    }
-
-    public PeerDto() {
-        this.fileChunk = new HashSet<>();
-    }
-
-    public HashSet<String> getFileChunk() {
-        return fileChunk;
-    }
-
-    public void setFileChunk(HashSet<String> fileChunk) {
-        this.fileChunk = fileChunk;
-    }
-
-    public String getPort() {
-        return port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
-    }
+    private String userName;
 }
