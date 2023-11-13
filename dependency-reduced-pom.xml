@@ -21,7 +21,7 @@
         <configuration>
           <transformers>
             <transformer>
-              <mainClass>com.udescbittorrent.App</mainClass>
+              <mainClass>com.udescbittorrent.ServerApp</mainClass>
             </transformer>
           </transformers>
         </configuration>
@@ -37,7 +37,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <maven.compiler.target>1.8</maven.compiler.target>
     <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
 </project>

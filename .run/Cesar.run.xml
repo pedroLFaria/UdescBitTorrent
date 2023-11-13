@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Cesar" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.udescbittorrent.ClientApp" />
+    <module name="my-app" />
+    <option name="VM_PARAMETERS" value="-D&quot;peer.thread.sleep-time&quot;=&quot;5&quot; -D&quot;peer.username&quot;=&quot;cesar&quot; -D&quot;tracker.url&quot;=&quot;http://localhost:8000&quot;" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.udescbittorrent.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

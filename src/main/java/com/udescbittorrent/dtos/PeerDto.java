@@ -12,4 +12,10 @@ import lombok.Setter;
 public class PeerDto {
     private String port;
     private String userName;
+    private String address;
+
+    @Override
+    public String toString() {
+        return String.format("%s %s:%s", userName,address,port);
+    }
 }

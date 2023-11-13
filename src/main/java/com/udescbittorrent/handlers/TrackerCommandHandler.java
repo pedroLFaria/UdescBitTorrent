@@ -1,74 +1,88 @@
 package com.udescbittorrent.handlers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.exceptions.CsvValidationException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.udescbittorrent.dtos.LogDto;
+import com.udescbittorrent.dtos.MessageTypes;
+import com.udescbittorrent.dtos.PeerDto;
+import com.udescbittorrent.services.CsvDatabaseService;
 import com.udescbittorrent.services.ObjectMapperService;
 import com.udescbittorrent.Utils;
-import com.udescbittorrent.dtos.PeerDto;
 import com.udescbittorrent.dtos.TrackerDto;
 import com.udescbittorrent.services.TrackerService;
+import lombok.var;
+import org.apache.http.entity.InputStreamEntity;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.time.LocalDateTime;
+
+import static com.udescbittorrent.Utils.getMessageBody;
+import static com.udescbittorrent.Utils.httpPost;
 
 public class TrackerCommandHandler implements HttpHandler {
 
     TrackerDto tracker = TrackerService.get();
     ObjectMapper mapper = ObjectMapperService.getInstance();
-
-    private static String readAllBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = inputStream.read(buffer)) != -1) {
-            result.write(buffer, 0, length);
-        }
-        return result.toString("UTF-8");
-    }
+    CsvDatabaseService databaseService = CsvDatabaseService.get();
 
     @Override
     public void handle(HttpExchange request) throws IOException {
         String command = Utils.getPathInfo(request, 2);
         String userName = Utils.getPathInfo(request, 3);
-        if ("signin".equalsIgnoreCase(command)) {
-            handleSignin(request, userName);
-        } else if ("message".equalsIgnoreCase(command)) {
-            handleMessage(request, userName);
+        PeerDto senderPeer = TrackerService.findPeerFromRequest(request);
+        PeerDto recipientPeer = tracker.getPeerTable().get(userName);
+        if(senderPeer == null || recipientPeer == null){
+            throw new IllegalArgumentException("Usuário não encontrado!");
+        }
+        if ("message".equalsIgnoreCase(command)) {
+            handleMessage(request, senderPeer, recipientPeer);
         } else if ("file".equalsIgnoreCase(command)) {
-            handleFile(request, userName);
+            String fileName = Utils.getPathInfo(request, 4);
+            handleFile(request, senderPeer, recipientPeer, fileName);
         }
     }
 
-    private void handleSignin(HttpExchange request, String userName) throws IOException {
-        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
-        String newPeerPort = getPeerDto(request);
-        PeerDto newPeer = new PeerDto(newPeerPort, userName);
-        tracker.addPeer(peerAddress, newPeer);
-        System.out.println("Novo peer adicionado a rede: " + peerAddress);
-        handleRespondToPeer(request, peerAddress);
+    private void handleMessage(HttpExchange request, PeerDto senderPeer, PeerDto recipientPeer) throws IOException {
+        String message = getMessageBody(request);
+        String url = getUrl(senderPeer, recipientPeer, "message");
+        Utils.httpPost(url, message);
+        logRequest(senderPeer, recipientPeer, MessageTypes.MESSAGE, message);
+        handleResponseToPeer(request, senderPeer);
     }
 
-    private void handleMessage(HttpExchange request, String userName) throws IOException {
-        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
-        handleRespondToPeer(request, peerAddress);
+    private void logRequest(PeerDto senderPeer, PeerDto recipientPeer, MessageTypes messageType, String contend) throws IOException {
+        LogDto row = new LogDto(senderPeer.getAddress(), senderPeer.getUserName(),
+            recipientPeer.getAddress(), recipientPeer.getUserName(), messageType.toString(), contend,
+            LocalDateTime.now().toString());
+        try {
+            databaseService.addRow(row);
+        } catch (Exception e) {
+            System.out.printf("Failed to add row to DataBase: %s\n", row);
+        }
     }
 
-    private void handleFile(HttpExchange request, String userName) throws IOException {
-        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
-        tracker.getPeerTable().remove(peerAddress);
-        System.out.println("Removendo o peer " + peerAddress);
-        handleResponse(request, null);
+    private String getUrl(PeerDto senderDto, PeerDto peerToSend, String method) {
+        var senderUsername = senderDto.getUserName();
+        return String.format("http://%s:%s/%s/%s", peerToSend.getAddress(), peerToSend.getPort(), method, senderUsername);
     }
 
-    private void handleRespondToPeer(HttpExchange request, String peerAddress) throws JsonProcessingException, IOException {
+    private void handleFile(HttpExchange request, PeerDto senderPeer, PeerDto recipientPeer, String fileName) throws IOException {
+        InputStream is = request.getRequestBody();
+        var entity = new InputStreamEntity(is);
+        String url = getUrl(senderPeer, recipientPeer, "file").concat("/" + fileName);
+        httpPost(url, entity);
+        is.close();
+        handleResponseToPeer(request, senderPeer);
+        logRequest(senderPeer, recipientPeer, MessageTypes.FILE, fileName);
+    }
+
+    private void handleResponseToPeer(HttpExchange request, PeerDto senderPeer) throws IOException {
         TrackerDto response = tracker.clone();
-        response.getPeerTable().remove(peerAddress);
+        response.getPeerTable().remove(senderPeer.getUserName());
         String responseBody = mapper.writeValueAsString(response);
-        System.out.println("Respondendo para peer: " + peerAddress);
+        System.out.println("Respondendo para peer: " + senderPeer);
         handleResponse(request, responseBody);
     }
 
@@ -82,10 +96,5 @@ public class TrackerCommandHandler implements HttpHandler {
         OutputStream os = request.getResponseBody();
         os.write(response.getBytes());
         os.close();
-    }
-
-    private String getPeerDto(HttpExchange request) throws IOException {
-        InputStream is = request.getRequestBody();
-        return readAllBytes(is);
     }
 }

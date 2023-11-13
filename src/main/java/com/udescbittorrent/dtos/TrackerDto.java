@@ -1,7 +1,10 @@
 package com.udescbittorrent.dtos;
 
+import lombok.Getter;
+
 import java.util.Hashtable;
 
+@Getter
 public class TrackerDto {
     private final Hashtable<String, PeerDto> peerTable;
 
@@ -11,10 +14,6 @@ public class TrackerDto {
 
     public void addPeer(String peerIp, PeerDto newPeer) {
         peerTable.put(peerIp, newPeer);
-    }
-
-    public Hashtable<String, PeerDto> getPeerTable() {
-        return peerTable;
     }
 
     @Override
@@ -31,6 +30,6 @@ public class TrackerDto {
 
     @Override
     public String toString() {
-        return String.format("TrackerDto{peerTable:{\n%s\n}", peerTable.toString()) ;
+        return String.format("TrackerDto{peerTable:{\n%s\n}", peerTable) ;
     }
 }

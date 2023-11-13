@@ -15,10 +15,10 @@ $ mvn clean install
 
 ```console
 # Executar o tracker
-java -Dprofile="tracker" -jar target/my-app-1.0-SNAPSHOT.jar
+java -cp target/my-app-1.0-SNAPSHOT.jar com.udescbittorrent.ServerApp
 
-#Executar um peer
-java -Dprofile="peer" -D"peer.thread.sleep-time"="5" -D"tracker.url"="http://localhost:8004" -jar target/my-app-1.0-SNAPSHOT.jar
+#Executar um peer com o username Joao
+java -D"peer.thread.sleep-time"="5" -D"peer.username"="Joao" -D"tracker.url"="http://localhost:8000" -cp target/my-app-1.0-SNAPSHOT.jar com.udescbittorrent.ClientApp
 ```
 
 

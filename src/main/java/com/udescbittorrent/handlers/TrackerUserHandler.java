@@ -1,15 +1,14 @@
 package com.udescbittorrent.handlers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.udescbittorrent.Utils;
 import com.udescbittorrent.services.ObjectMapperService;
 import com.udescbittorrent.dtos.PeerDto;
 import com.udescbittorrent.dtos.TrackerDto;
 import com.udescbittorrent.services.TrackerService;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,52 +18,40 @@ public class TrackerUserHandler implements HttpHandler {
     TrackerDto tracker = TrackerService.get();
     ObjectMapper mapper = ObjectMapperService.getInstance();
 
-    private static String readAllBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream result = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = inputStream.read(buffer)) != -1) {
-            result.write(buffer, 0, length);
-        }
-        return result.toString("UTF-8");
-    }
-
     @Override
     public void handle(HttpExchange request) throws IOException {
+        PeerDto peer = TrackerService.findPeerFromRequest(request);
         if ("POST".equals(request.getRequestMethod())) {
             handlePost(request);
         } else if ("GET".equals(request.getRequestMethod())) {
-            handleGet(request);
+            handleGet(request, peer);
         } else if ("DELETE".equals(request.getRequestMethod())) {
-            handleDelete(request);
+            handleDelete(request, peer);
         }
     }
 
-    private void handleGet(HttpExchange request) throws IOException {
-        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
-        handleRespondToPeer(request, peerAddress);
+    private void handleGet(HttpExchange request, PeerDto peer) throws IOException {
+        handleResponseToPeer(request, peer);
     }
 
     private void handlePost(HttpExchange request) throws IOException {
-        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
         PeerDto newPeer = getPeerDto(request);
-        tracker.addPeer(peerAddress, newPeer);
-        System.out.println("Novo peer adicionado a rede: " + peerAddress);
-        handleRespondToPeer(request, peerAddress);
+        tracker.addPeer(newPeer.getUserName(), newPeer);
+        System.out.println("Novo peer adicionado a rede: " + newPeer);
+        handleResponseToPeer(request, newPeer);
     }
 
-    private void handleDelete(HttpExchange request) throws IOException {
-        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
-        tracker.getPeerTable().remove(peerAddress);
-        System.out.println("Removendo o peer " + peerAddress);
-        handleResponse(request, null);
+    private void handleDelete(HttpExchange request, PeerDto peer) throws IOException {
+        tracker.getPeerTable().remove(peer.getUserName());
+        System.out.println("Removendo o peer " + peer);
+        handleResponse(request, "Peer removido " + peer);
     }
 
-    private void handleRespondToPeer(HttpExchange request, String peerAddress) throws JsonProcessingException, IOException {
+    private void handleResponseToPeer(HttpExchange request, PeerDto peer) throws IOException {
         TrackerDto response = tracker.clone();
-        response.getPeerTable().remove(peerAddress);
+        response.getPeerTable().remove(peer.getUserName());
         String responseBody = mapper.writeValueAsString(response);
-        System.out.println("Respondendo para peer: " + peerAddress);
+        System.out.println("Respondendo para peer: " + peer);
         handleResponse(request, responseBody);
     }
 
@@ -82,7 +69,10 @@ public class TrackerUserHandler implements HttpHandler {
 
     private PeerDto getPeerDto(HttpExchange request) throws IOException {
         InputStream is = request.getRequestBody();
-        String requestBodyJson = readAllBytes(is);
-        return mapper.readValue(requestBodyJson, PeerDto.class);
+        String requestBodyJson = Utils.readAllBytes(is);
+        String peerAddress = request.getRemoteAddress().getAddress().getHostAddress();
+        PeerDto peer = mapper.readValue(requestBodyJson, PeerDto.class);
+        peer.setAddress(peerAddress);
+        return peer;
     }
 }

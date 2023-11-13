@@ -5,58 +5,43 @@ import com.sun.net.httpserver.HttpExchange;
 import com.udescbittorrent.dtos.TrackerDto;
 import com.udescbittorrent.services.HttpClientService;
 import com.udescbittorrent.services.ObjectMapperService;
-import com.udescbittorrent.services.PropertiesService;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 public class Utils {
     private static final HttpClient httpClient = HttpClientService.getHttpClient();
     static ObjectMapper mapper = ObjectMapperService.getInstance();
 
-    public static HashSet<String> getFileChunks() {
-        HashSet<String> fileList = new HashSet<>();
-        String folderPath = PropertiesService.peerFileFolders;
-        File folder = new File(folderPath);
-        if (folder.exists() && folder.isDirectory()) {
-            File[] files = folder.listFiles();
-            if (files != null) {
-                for (File file : files) {
-                    if (file.isFile()) {
-                        fileList.add(file.getName());
-                    }
-                }
-            }
+
+    public static HttpResponse httpPost(String url, HttpEntity entity){
+        HttpPost httpPost = new HttpPost(url);
+        try {
+            httpPost.setEntity(entity);
+            HttpResponse response = HttpClients.createDefault().execute(httpPost);
+            System.out.println("Response " + response.getStatusLine());
+            return response;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return fileList;
     }
-    
-    // public static HttpResponse httpPost(String url, File file) {
-    //     HttpPost httpPost = new HttpPost(url);
-    //     try {
-    //         BufferedReader reader = new BufferedReader(new FileReader(file));
-    //         file.
-    //         CloseableHttpClient httpclient = HttpClients.createDefault();
-    //         HttpResponse response = httpclient.execute(httpPost);
-    //         System.out.println("Tracker response " + response.getStatusLine());
-    //         return response;
-    //     } catch (IOException e) {
-    //         throw new RuntimeException(e);
-    //     }
-    // }
 
     public static HttpResponse httpPost(String url, Object body) {
         HttpPost httpPost = new HttpPost(url);
@@ -65,7 +50,25 @@ public class Utils {
             httpPost.setEntity(new StringEntity(mapper.writeValueAsString(body)));
             CloseableHttpClient httpclient = HttpClients.createDefault();
             HttpResponse response = httpclient.execute(httpPost);
-            System.out.println("Tracker response " + response.getStatusLine());
+            System.out.println("Response " + response.getStatusLine());
+            return response;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static HttpResponse httpPost(String url, File body) {
+        HttpPost httpPost = new HttpPost(url);
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+        builder.addBinaryBody(
+            "file",
+            body,
+            ContentType.APPLICATION_OCTET_STREAM,
+            body.getName()
+        );
+        try {
+            httpPost.setEntity(builder.build());
+            HttpResponse response = HttpClients.createDefault().execute(httpPost);
+            System.out.println("Response " + response.getStatusLine());
             return response;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -116,5 +119,19 @@ public class Utils {
             System.out.println("Falha ao obter uma porta!");
             return -1;
         }
+    }
+    public static String getMessageBody(HttpExchange request) throws IOException {
+        InputStream is = request.getRequestBody();
+        return readAllBytes(is);
+    }
+
+    public static String readAllBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = inputStream.read(buffer)) != -1) {
+            result.write(buffer, 0, length);
+        }
+        return result.toString("UTF-8");
     }
 }

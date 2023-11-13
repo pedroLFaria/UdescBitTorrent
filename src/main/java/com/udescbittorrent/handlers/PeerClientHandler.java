@@ -23,26 +23,6 @@ public class PeerClientHandler {
         request.getResponseBody().close();
     }
 
-    // public void handle(String request) throws IOException {
-    //     String urlInfo = Utils.getPathInfo(request, 2);
-    //     sendMessage(request);        
-    //     sendFile(request);
-    // }
-
-    // private void signin(String username) throws IOException {
-        
-    // }
-
-    // private void sendMessage(HttpExchange request) throws IOException {
-    //     boolean success = peerClient.getAllMissingChunks();
-    //     handleResponse(request, success ? HttpStatus.SC_OK : HttpStatus.SC_INTERNAL_SERVER_ERROR, success ? "Sucesso ao obter arquivo!" : "Falha ao obter arquivo!");
-    // }
-
-    // private void sendFile(HttpExchange request) throws IOException {
-    //     boolean success = peerClient.getNextMissingChunk();
-    //     handleResponse(request, success ? HttpStatus.SC_OK : HttpStatus.SC_INTERNAL_SERVER_ERROR, success ? "Sucesso ao obter arquivo!" : "Falha ao obter arquivo!");
-    // }
-
     private void handlePost(HttpExchange request) throws IOException {
         handleResponse(request, HttpStatus.SC_OK, "Hello World!");
     }
